@@ -1,0 +1,4 @@
+:set -fno-break-on-exception
+:set -fno-break-on-error
+:set -XOverloadedStrings
+:set -XNoMonomorphismRestriction

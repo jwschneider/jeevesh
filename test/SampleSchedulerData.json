@@ -1,0 +1,30 @@
+[
+    {
+        "identifier": "1",
+        "releaseDate": 0,
+        "processTime": 3,
+        "deadline": 8,
+        "value": 2
+    },
+    {
+        "identifier": "2",
+        "releaseDate": 2,
+        "processTime": 2,
+        "deadline": 10,
+        "value": 3
+    },
+    {
+        "identifier": "3",
+        "releaseDate": 3,
+        "processTime": 3,
+        "deadline": 10,
+        "value": 4
+    },
+    {
+        "identifier": "4",
+        "releaseDate": 6,
+        "processTime": 2,
+        "deadline": 14,
+        "value": 2
+    }
+]

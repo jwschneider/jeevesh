@@ -28,6 +28,8 @@ dependencies:
 - req
 - modern-uri
 - transformers-either
+- hspec
+- hspec-discover
 
 library:
   source-dirs: src
@@ -44,10 +46,10 @@ executables:
     - jeeves
 
 tests:
-  jeeves-test:
+  unit-test:
     main:                Spec.hs
     source-dirs:        
-    - test
+    - test/unit
     - src
     ghc-options:
     - -threaded
@@ -55,3 +57,4 @@ tests:
     - -with-rtsopts=-N
     dependencies:
     - jeeves
+

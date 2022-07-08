@@ -37,6 +37,8 @@ library
     , aeson
     , base >=4.7 && <5
     , bytestring
+    , hspec
+    , hspec-discover
     , modern-uri
     , req
     , text
@@ -55,6 +57,8 @@ executable jeeves-exe
     , aeson
     , base >=4.7 && <5
     , bytestring
+    , hspec
+    , hspec-discover
     , jeeves
     , modern-uri
     , req
@@ -62,16 +66,17 @@ executable jeeves-exe
     , transformers-either
   default-language: Haskell2010
 
-test-suite jeeves-test
+test-suite unit-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
+      SchedulerSpec
       Lib
       RTMInterface
       Scheduler
       Paths_jeeves
   hs-source-dirs:
-      test
+      test/unit
       src
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
@@ -79,6 +84,8 @@ test-suite jeeves-test
     , aeson
     , base >=4.7 && <5
     , bytestring
+    , hspec
+    , hspec-discover
     , jeeves
     , modern-uri
     , req

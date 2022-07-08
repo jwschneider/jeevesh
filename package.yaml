@@ -30,6 +30,7 @@ dependencies:
 - transformers-either
 - hspec
 - hspec-discover
+- sort
 
 library:
   source-dirs: src

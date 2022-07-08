@@ -41,6 +41,7 @@ library
     , hspec-discover
     , modern-uri
     , req
+    , sort
     , text
     , transformers-either
   default-language: Haskell2010
@@ -62,6 +63,7 @@ executable jeeves-exe
     , jeeves
     , modern-uri
     , req
+    , sort
     , text
     , transformers-either
   default-language: Haskell2010
@@ -88,6 +90,7 @@ test-suite integration-test
     , jeeves
     , modern-uri
     , req
+    , sort
     , text
     , transformers-either
   default-language: Haskell2010
@@ -115,6 +118,7 @@ test-suite unit-test
     , jeeves
     , modern-uri
     , req
+    , sort
     , text
     , transformers-either
   default-language: Haskell2010

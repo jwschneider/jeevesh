@@ -14,6 +14,8 @@ import Data.Aeson
 import Data.Maybe (fromJust)
 import Data.Monoid ((<>))
 import Data.Text
+import Data.Sort
+import Data.List
 import GHC.Generics
 import Network.HTTP.Req
 import qualified Data.ByteString.Char8 as B
@@ -40,14 +42,6 @@ testRTMEndpoint = runReq defaultHttpConfig $ do
             "format" =: ("json" :: String)
     liftIO $ print (responseBody v :: Object)
 
--- rtmEcho name value = runReq defaultHttpConfig $ do
---     json <- req GET (https "api.rememberthemilk.com" /: "services" /: "rest") NoReqBody jsonResponse $
---             "method" =: ("rtm.test.echo" :: Text) <>
---             "api_key" =: ("60f3e4cadaa2a9b4f3d89bab1ddf3e60" :: Text)  <>
---             name =: value <>
---             "format" =: ("json" :: Text)
---     let body = responseBody json :: Value
---     liftIO $ print (parseResponse body :: EitherT RError Result REcho)
 
 parseEcho :: Value -> Result (Either RError REcho)
 parseEcho val =
@@ -64,6 +58,12 @@ failWithRError (Error s) = Left $ RError "fail" $ ErrorInfo "0" ("parse error: "
 failWithRError (Success val) = val
 
 
+rtmGetJ :: [(Text, Text)] -> IO Value
+rtmGetJ params = runReq defaultHttpConfig $ do
+    json <- req GET (https "api.rememberthemilk.com" /: "services" /: "rest") NoReqBody jsonResponse $
+        Data.List.foldl' (\str pair -> str <> uncurry (=:) pair) mempty (("format", "json") : params)
+    return (responseBody json :: Value)
+
 rtmEcho' :: Text -> IO (Either RError REcho)
 rtmEcho' name = runReq defaultHttpConfig $ do
     json <- req GET (https "api.rememberthemilk.com" /: "services" /: "rest") NoReqBody jsonResponse $
@@ -75,7 +75,9 @@ rtmEcho' name = runReq defaultHttpConfig $ do
     return (parseResponse body :: Either RError REcho)
 
 rtmEcho :: Text -> Response REcho
-rtmEcho name = EitherT $ rtmEcho' name
+rtmEcho name = EitherT $ do
+    body <- rtmGetJ [("method", "rtm.test.echo"), ("api_key", "60f3e4cadaa2a9b4f3d89bab1ddf3e60"), ("name", name)]
+    return (parseResponse body :: Either RError REcho)
 
 reduceEcho :: Text -> IO Text
 reduceEcho echoName = do
@@ -83,3 +85,7 @@ reduceEcho echoName = do
     case ret of
         Left error -> return $ (msg . err) error
         Right resp -> return $ name resp
+
+signRequest :: [(Text, Text)] -> Text
+signRequest params = 
+    Data.List.foldl' (\str pair -> str `append` fst pair `append` snd pair) Data.Text.empty (sortOn fst params)

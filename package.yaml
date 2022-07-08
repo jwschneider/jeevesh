@@ -57,4 +57,15 @@ tests:
     - -with-rtsopts=-N
     dependencies:
     - jeeves
+  integration-test:
+    main:                Spec.hs
+    source-dirs:        
+    - test/integration
+    - src
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - jeeves
 

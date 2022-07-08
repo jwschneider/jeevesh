@@ -66,6 +66,32 @@ executable jeeves-exe
     , transformers-either
   default-language: Haskell2010
 
+test-suite integration-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      Lib
+      RTMInterface
+      Scheduler
+      Paths_jeeves
+  hs-source-dirs:
+      test/integration
+      src
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      HUnit
+    , aeson
+    , base >=4.7 && <5
+    , bytestring
+    , hspec
+    , hspec-discover
+    , jeeves
+    , modern-uri
+    , req
+    , text
+    , transformers-either
+  default-language: Haskell2010
+
 test-suite unit-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs

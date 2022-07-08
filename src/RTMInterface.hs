@@ -20,9 +20,9 @@ import qualified Data.ByteString.Char8 as B
 import qualified Text.URI as URI
 
 newtype RTMResponse a = RTMResponse { rsp :: a } deriving (Generic, Show)
-data REcho = EchoResponse { stat :: Text, api_key :: Text, name :: Text, format :: Text, method :: Text} deriving (Generic, Show)
-data ErrorInfo = ErrorInfo { code :: Text, msg :: Text } deriving (Generic, Show)
-data RError = RError { stat :: Text, err :: ErrorInfo} deriving (Generic, Show)
+data REcho = EchoResponse { stat :: Text, api_key :: Text, name :: Text, format :: Text, method :: Text} deriving (Generic, Show, Eq)
+data ErrorInfo = ErrorInfo { code :: Text, msg :: Text } deriving (Generic, Show, Eq)
+data RError = RError { stat :: Text, err :: ErrorInfo} deriving (Generic, Show, Eq)
 type Response a = EitherT RError IO a
 
 instance FromJSON RError

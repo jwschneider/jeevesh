@@ -32,18 +32,20 @@ sampleSchedule = do
 spec :: Spec
 spec = do
     describe "Scheduler.Job parseJSON" $ do
-        it "decodes a Job in correct JSON representation" $ do
-            jsonString <- B.readFile "test/unit/jobs/SampleGoodJob.json"
-            (decode jsonString :: Maybe Job) `shouldBe` Just (Job "0" 0 0 0 0)
-        it "returns Nothing otherwise" $ do
-            jsonString <- B.readFile "test/unit/jobs/SampleBadJob.json"
-            (decode jsonString :: Maybe Job) `shouldBe` Nothing
-    describe "Scheduler.Schedule on SampleSchedulerData" $ do
-        it "has correct Job order" $ do
-            schedule <- sampleSchedule
-            let jobOrder = map (identifier . fst) <$> schedule
-            jobOrder `shouldBe` Just ["2", "3", "4"]
-        it "has correct launch times" $ do
-            schedule <- sampleSchedule
-            let launchTimes = map snd <$> schedule
-            launchTimes `shouldBe` Just [2, 5, 9]
+        context "when provided with a correct JSON representation of a Job" $ do
+            it "returns a Job" $ do
+                jsonString <- B.readFile "test/unit/jobs/SampleGoodJob.json"
+                (decode jsonString :: Maybe Job) `shouldBe` Just (Job "0" 0 0 0 0)
+        context "when provided with anything else" $ do
+            it "returns Nothing" $ do
+                jsonString <- B.readFile "test/unit/jobs/SampleBadJob.json"
+                (decode jsonString :: Maybe Job) `shouldBe` Nothing
+    describe "Scheduler.Schedule" $ do
+        before sampleSchedule $ do
+            context "when run on SampleScheduleData" $ do
+                it "has correct Job order" $ \schedule -> do
+                    let jobOrder = map (identifier . fst) <$> schedule
+                    jobOrder `shouldBe` Just ["2", "3", "4"]
+                it "has correct launch times" $ \schedule -> do
+                    let launchTimes = map snd <$> schedule
+                    launchTimes `shouldBe` Just [2, 5, 9]

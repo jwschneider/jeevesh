@@ -76,8 +76,17 @@ rtmEcho name = EitherT $ do
     body <- rtmGetJ [("method", "rtm.test.echo"), ("api_key", "60f3e4cadaa2a9b4f3d89bab1ddf3e60"), ("name", name)]
     return (parseResponse body :: Either RError REcho)
 
--- rtmFrob :: Response RFrob
+rtmFrob :: Response RFrob
+rtmFrob = EitherT $ do
+    let params = [("method", "rtm.auth.getFrob"), ("api_key", "60f3e4cadaa2a9b4f3d89bab1ddf3e60")]
+    body <- rtmGetJ $ signedRequest params
+    return (parseResponse body :: Either RError RFrob)
 
-signRequest :: [(Text, Text)] -> Text
-signRequest params = 
+generateSignature :: [(Text, Text)] -> Text
+generateSignature params = 
     Data.List.foldl' (\str pair -> str `append` fst pair `append` snd pair) Data.Text.empty (sortOn fst params)
+
+signedRequest :: [(Text, Text)] -> [(Text, Text)]
+signedRequest params =
+    let signature = generateSignature params in
+        params ++ [("api_sig", signature)]

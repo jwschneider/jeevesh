@@ -4,6 +4,7 @@ import Test.Hspec
 import RTMInterface
 import Data.Text
 import Control.Monad.Trans.Either
+import GHC.TypeLits
 
 
 main :: IO ()

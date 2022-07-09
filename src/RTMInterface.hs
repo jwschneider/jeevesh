@@ -3,8 +3,6 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE DataKinds #-}
 {-# LANGUAGE TemplateHaskell #-}
 
 module RTMInterface where
@@ -24,27 +22,23 @@ import Data.Text
 import Data.Sort
 import Data.List
 import GHC.Generics
-import GHC.TypeLits
 import Network.HTTP.Req
 import qualified Data.ByteString.Char8 as B
 import qualified Text.URI as URI
 
 newtype RTMResponse a = RTMResponse { rsp :: a } deriving (Generic, Show)
 -- data REcho = EchoResponse { stat :: Text, api_key :: Text, name :: Text, format :: Text, method :: Text} deriving (Generic, Show, Eq)
--- these R* types maybe should be parameterized data types
 data ErrorInfo = ErrorInfo { code :: Text, msg :: Text } deriving (Generic, Show, Eq)
 data RError = RError { stat :: Text, err :: ErrorInfo} deriving (Generic, Show, Eq)
-data ROk (payload :: Symbol) pType = ROk { stat :: Text, api_key :: Text, payload :: pType, format :: Text, method :: Text} deriving (Generic, Show)
 type Response a = EitherT RError IO a
 
-instance (FromJSON a, KnownSymbol b) => FromJSON (ROk b a)
 
 instance FromJSON RError
 instance FromJSON ErrorInfo
 instance (FromJSON a) => FromJSON (RTMResponse a)
 
-$(mkResponseRecord (mkName "Echo") (mkName "name") ''Text)
-instance FromJSON REcho
+$(mkResponseRecord "Echo" "name" ''Text)
+$(mkResponseRecord "Frob" "frob" ''Text)
 
 testRTMEndpoint :: IO ()
 testRTMEndpoint = runReq defaultHttpConfig $ do

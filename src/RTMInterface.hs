@@ -17,19 +17,24 @@ import Control.Monad.Trans.Either
 import Data.Aeson
 import Data.Aeson.Types
 import Data.Maybe (fromJust)
-import Data.Monoid ((<>))
-import Data.Text
+import Data.Monoid
+import qualified Data.Text as T
+import qualified Data.Text.Encoding as T
 import Data.Sort
 import Data.List
+import Data.Word (Word8)
+import Data.Bifunctor (bimap)
 import GHC.Generics
 import Network.HTTP.Req
-import qualified Data.ByteString.Char8 as B
+import qualified Data.ByteString as B
+import qualified Crypto.Hash.MD5 as MD5
 import qualified Text.URI as URI
+import Web.Internal.HttpApiData
+import Data.Hash.MD5
 
 newtype RTMResponse a = RTMResponse { rsp :: a } deriving (Generic, Show)
--- data REcho = EchoResponse { stat :: Text, api_key :: Text, name :: Text, format :: Text, method :: Text} deriving (Generic, Show, Eq)
-data ErrorInfo = ErrorInfo { code :: Text, msg :: Text } deriving (Generic, Show, Eq)
-data RError = RError { stat :: Text, err :: ErrorInfo} deriving (Generic, Show, Eq)
+data ErrorInfo = ErrorInfo { code :: T.Text, msg :: T.Text } deriving (Generic, Show, Eq)
+data RError = RError { stat :: T.Text, err :: ErrorInfo} deriving (Generic, Show, Eq)
 type Response a = EitherT RError IO a
 
 
@@ -37,8 +42,8 @@ instance FromJSON RError
 instance FromJSON ErrorInfo
 instance (FromJSON a) => FromJSON (RTMResponse a)
 
-$(mkResponseRecord "Echo" "name" ''Text)
-$(mkResponseRecord "Frob" "frob" ''Text)
+$(mkResponseRecord "Echo" "name" ''T.Text)
+$(mkResponseRecord "Frob" "frob" ''T.Text)
 
 testRTMEndpoint :: IO ()
 testRTMEndpoint = runReq defaultHttpConfig $ do
@@ -48,6 +53,13 @@ testRTMEndpoint = runReq defaultHttpConfig $ do
             "name" =: ("test" :: String) <>
             "format" =: ("json" :: String)
     liftIO $ print (responseBody v :: Object)
+
+
+getApiKeyAndSharedSecret :: IO (T.Text, T.Text)
+getApiKeyAndSharedSecret = do
+    csv <- readFile "rtm-id.secret"
+    let (key, secret) = break (==',') csv in
+        return (T.pack key, T.pack (drop 1 secret))
 
 
 parseEcho :: Value -> Result (Either RError REcho)
@@ -61,32 +73,34 @@ parseResponse val =  failWithRError $ Right . rsp <$> (fromJSON val :: Result (R
                      Left . rsp <$> (fromJSON val :: Result (RTMResponse RError))
 
 failWithRError :: Result (Either RError a) -> Either RError a
-failWithRError (Error s) = Left $ RError "fail" $ ErrorInfo "0" ("parse error: " `append` pack s)
+failWithRError (Error s) = Left $ RError "fail" $ ErrorInfo "0" ("parse error: " `T.append` T.pack s)
 failWithRError (Success val) = val
 
+rtmGetJ :: [(T.Text, T.Text)] -> IO Value
+rtmGetJ params = do
+    (key, secret) <- getApiKeyAndSharedSecret
+    let signedParams = signRequest (("api_key", key) : ("format", "json") : params) secret
+    runReq defaultHttpConfig $ do
+        json <- req GET (https "api.rememberthemilk.com" /: "services" /: "rest") NoReqBody jsonResponse $
+            Data.List.foldl' (\str pair -> str <> uncurry (=:) pair) mempty signedParams
+        return (responseBody json :: Value)
 
-rtmGetJ :: [(Text, Text)] -> IO Value
-rtmGetJ params = runReq defaultHttpConfig $ do
-    json <- req GET (https "api.rememberthemilk.com" /: "services" /: "rest") NoReqBody jsonResponse $
-        Data.List.foldl' (\str pair -> str <> uncurry (=:) pair) mempty (("format", "json") : params)
-    return (responseBody json :: Value)
-
-rtmEcho :: Text -> Response REcho
+rtmEcho :: T.Text -> Response REcho
 rtmEcho name = EitherT $ do
-    body <- rtmGetJ [("method", "rtm.test.echo"), ("api_key", "60f3e4cadaa2a9b4f3d89bab1ddf3e60"), ("name", name)]
+    body <- rtmGetJ [("method", "rtm.test.echo"), ("name", name)]
     return (parseResponse body :: Either RError REcho)
 
 rtmFrob :: Response RFrob
 rtmFrob = EitherT $ do
-    let params = [("method", "rtm.auth.getFrob"), ("api_key", "60f3e4cadaa2a9b4f3d89bab1ddf3e60")]
-    body <- rtmGetJ $ signedRequest params
+    body <- rtmGetJ [("method", "rtm.auth.getFrob")]
     return (parseResponse body :: Either RError RFrob)
 
-generateSignature :: [(Text, Text)] -> Text
-generateSignature params = 
-    Data.List.foldl' (\str pair -> str `append` fst pair `append` snd pair) Data.Text.empty (sortOn fst params)
+generateSignature :: [(T.Text, T.Text)] -> T.Text -> T.Text -- don't commit until api key and shared secret are removed
+generateSignature params secret =
+    (T.pack . md5s . Str . T.unpack) $ 
+        Data.List.foldl' (\str pair -> str `T.append` fst pair `T.append` snd pair) secret (sortOn fst params)
 
-signedRequest :: [(Text, Text)] -> [(Text, Text)]
-signedRequest params =
-    let signature = generateSignature params in
+signRequest :: [(T.Text, T.Text)] -> T.Text -> [(T.Text, T.Text)]
+signRequest params secret = 
+    let signature = generateSignature params secret in
         params ++ [("api_sig", signature)]

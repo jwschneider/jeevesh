@@ -32,6 +32,9 @@ dependencies:
 - hspec-discover
 - sort
 - template-haskell
+- cryptohash-md5
+- http-api-data
+- MissingH
 
 library:
   source-dirs: src

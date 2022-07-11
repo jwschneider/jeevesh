@@ -35,11 +35,14 @@ library
       src
   build-depends:
       HUnit
+    , MissingH
     , aeson
     , base >=4.7 && <5
     , bytestring
+    , cryptohash-md5
     , hspec
     , hspec-discover
+    , http-api-data
     , modern-uri
     , req
     , sort
@@ -57,11 +60,14 @@ executable jeeves-exe
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       HUnit
+    , MissingH
     , aeson
     , base >=4.7 && <5
     , bytestring
+    , cryptohash-md5
     , hspec
     , hspec-discover
+    , http-api-data
     , jeeves
     , modern-uri
     , req
@@ -75,6 +81,7 @@ test-suite integration-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
+      IntegrationSpec
       Lib
       RTMInterface
       RTMTypes
@@ -86,11 +93,14 @@ test-suite integration-test
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       HUnit
+    , MissingH
     , aeson
     , base >=4.7 && <5
     , bytestring
+    , cryptohash-md5
     , hspec
     , hspec-discover
+    , http-api-data
     , jeeves
     , modern-uri
     , req
@@ -116,11 +126,14 @@ test-suite unit-test
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       HUnit
+    , MissingH
     , aeson
     , base >=4.7 && <5
     , bytestring
+    , cryptohash-md5
     , hspec
     , hspec-discover
+    , http-api-data
     , jeeves
     , modern-uri
     , req

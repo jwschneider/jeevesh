@@ -42,8 +42,8 @@ instance FromJSON RError
 instance FromJSON ErrorInfo
 instance (FromJSON a) => FromJSON (RTMResponse a)
 
-$(mkResponseRecord "Echo" "name" ''T.Text)
-$(mkResponseRecord "Frob" "frob" ''T.Text)
+$(mkResponseRecord (mkName "REcho") (mkName "name") ''T.Text)
+$(mkResponseRecord (mkName "RFrob") (mkName "frob") ''T.Text)
 
 testRTMEndpoint :: IO ()
 testRTMEndpoint = runReq defaultHttpConfig $ do

@@ -4,6 +4,7 @@ module IntegrationSpec where
 
 import Test.HUnit
 import Test.Hspec
+import RTMTypes
 import RTMInterface
 import qualified Data.Text as T
 import Control.Monad.Trans.Either
@@ -20,9 +21,9 @@ spec :: Spec
 spec = do
     describe "RTMInterface.rtmEcho" $ do
         it "should return an REcho object with supplied name" $ do
-            let textToEcho = "hello!" :: T.Text
+            let textToEcho = "hello!"
             echo <- runEitherT (rtmEcho textToEcho)
-            (name <$> echo) `shouldBe` Right textToEcho
+            (name <$> echo) `shouldBe` Right (T.pack textToEcho)
     describe "RTMInterface.rtmFrob" $ do
         it "should return a RFrob object" $ do
             frobReturn <- runEitherT rtmFrob

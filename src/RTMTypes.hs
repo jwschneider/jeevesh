@@ -27,6 +27,10 @@ data ErrorInfo = ErrorInfo { code :: T.Text, msg :: T.Text } deriving (Generic, 
 data RError = RError { stat :: T.Text, err :: ErrorInfo} deriving (Generic, Show, Eq)
 type Response a = EitherT RError IO a
 
+data User = User {id :: T.Text, username :: T.Text, fullname :: T.Text} deriving (Generic, Show, Eq)
+instance FromJSON User
+data Auth = Auth {token :: T.Text, perms :: T.Text, user :: User} deriving (Generic, Show, Eq)
+instance FromJSON Auth
 
 instance FromJSON RError
 instance FromJSON ErrorInfo

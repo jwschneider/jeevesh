@@ -14,10 +14,10 @@ import Control.Monad
 import Data.List (foldl')
 
 -- rtmEcho :: T.Text -> Response REcho
--- rtmEcho name = EitherT $ do
+-- rtmEcho p_name = EitherT $ do
 --     body <- rtmGetJ [("method", "rtm.test.echo"), ("name", name)]
 --     return (parseResponse body :: Either RError REcho)
-$(genRtmMethod "Echo" "rtm.test.echo" "name" ''T.Text ["name"])
+$(genRtmMethod "Echo" "rtm.test.echo" "name" ''T.Text ["name"]) -- do not make param names the same as payload names
 $(genRtmMethod "Frob" "rtm.auth.getFrob" "frob" ''T.Text [])
 
 userAuth :: IO ()
@@ -29,8 +29,8 @@ userAuth = do
         Right rfrob ->  do 
             openBrowser $ endpoint ++ "?" ++ 
                 (tail . T.unpack) (foldl' (\b (k,  v) -> b `T.append` "&" `T.append` k `T.append` "=" `T.append` v) T.empty (signRequest params secret))
-            putStrLn "Press any key to continue"
+            putStrLn "Press any key when complete with authentication"
             void getChar
             where
                 endpoint = "https://www.rememberthemilk.com/services/auth/"
-                params = [("api_key", key), ("perms", "delete"), ("frob", frob rfrob)]
+                params = [("api_key", key), ("perms", "delete"), ("frob", rfrob)]

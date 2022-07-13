@@ -20,14 +20,14 @@ assertFailOnLeft val =
 spec :: Spec
 spec = do
     describe "RTMInterface.rtmEcho" $ do
-        it "should return an REcho object with supplied name" $ do
+        it "should return Text with supplied name" $ do
             let textToEcho = "hello!"
             echo <- runEitherT (rtmEcho textToEcho)
-            (name <$> echo) `shouldBe` Right (T.pack textToEcho)
+            echo `shouldBe` Right (T.pack textToEcho)
     describe "RTMInterface.rtmFrob" $ do
         it "should return a RFrob object" $ do
             frobReturn <- runEitherT rtmFrob
             assertFailOnLeft frobReturn
         it "should have nonempty Text payload" $ do
             frobReturn <- runEitherT rtmFrob
-            (T.null . frob <$> frobReturn) `shouldBe` Right False
+            (T.null <$> frobReturn) `shouldBe` Right False

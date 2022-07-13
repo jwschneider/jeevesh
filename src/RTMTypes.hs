@@ -88,34 +88,34 @@ mkSignature methodName numParams returnType = do
         typ = foldl' (\sig t -> AppT (AppT ArrowT t) sig) (AppT (ConT ''Response) (ConT returnType)) rptText
 
 
--- [("method", "rtm.foo"), ("param1", param1) ... ]
+-- [("method", "rtm.foo"), ("param1", p_param1) ... ]
 mkRequestParams :: String -> [String] -> [Name] -> Q Exp
 mkRequestParams endpoint requestParams paramNames = do
     pure $ ListE (TupE [Just (LitE (StringL "method")), Just (LitE (StringL endpoint))] :
         zipWith (\str nam -> TupE [Just (LitE (StringL str)), Just (VarE nam)]) requestParams paramNames)
 
--- rtmFoo param1 ... = EitherT $ do
+-- rtmFoo p_param1 ... = EitherT $ do
 --     body <- rtmGetJ [("method", "rtm.foo"), ("param1", param1) ...]
 --     return (parseResponse body :: Either RError RFoo)
-mkMethod :: Name -> String -> [String] -> Name -> Q [Dec]
-mkMethod methodName endpoint requestParams recName = do
+mkMethod :: Name -> String -> [String] -> Name -> Name -> Q [Dec]
+mkMethod methodName endpoint requestParams recName payloadName = do
     expr <- [| EitherT $ do 
                 body <- rtmGetJ $ map (join bimap T.pack) $(mkRequestParams endpoint requestParams paramNames)
-                return (parseResponse body :: Either RError $(conT recName))
+                return $ $(varE payloadName) <$> (parseResponse body :: Either RError $(conT recName))
             |]
     (pure. pure) $ FunD methodName [Clause pat (NormalB expr) []]
     where
-        paramNames = map mkName requestParams
+        paramNames = map (mkName . ("p_" ++)) requestParams
         pat = map VarP paramNames
 
 genRtmMethod :: String -> String -> String -> Name -> [String] -> Q [Dec]
-genRtmMethod name endpoint payload payloadType requestParams = do
+genRtmMethod rtmName endpoint payload payloadType requestParams = do
     record <- mkResponseRecord recName payloadName payloadType
-    sigature <- mkSignature methodName (length requestParams) recName
-    method <- mkMethod methodName endpoint requestParams recName
+    sigature <- mkSignature methodName (length requestParams) payloadType
+    method <- mkMethod methodName endpoint requestParams recName payloadName
     return (record ++ sigature ++ method)
     where
-        recName = mkName ("R" ++ name)
+        recName = mkName ("R" ++ rtmName)
         payloadName = mkName payload
-        methodName = mkName ("rtm" ++ name)
+        methodName = mkName ("rtm" ++ rtmName)
 

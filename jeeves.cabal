@@ -44,6 +44,7 @@ library
     , hspec-discover
     , http-api-data
     , modern-uri
+    , open-browser
     , req
     , sort
     , template-haskell
@@ -70,6 +71,7 @@ executable jeeves-exe
     , http-api-data
     , jeeves
     , modern-uri
+    , open-browser
     , req
     , sort
     , template-haskell
@@ -103,6 +105,7 @@ test-suite integration-test
     , http-api-data
     , jeeves
     , modern-uri
+    , open-browser
     , req
     , sort
     , template-haskell
@@ -136,6 +139,7 @@ test-suite unit-test
     , http-api-data
     , jeeves
     , modern-uri
+    , open-browser
     , req
     , sort
     , template-haskell

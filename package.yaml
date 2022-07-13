@@ -35,6 +35,7 @@ dependencies:
 - cryptohash-md5
 - http-api-data
 - MissingH
+- open-browser
 
 library:
   source-dirs: src

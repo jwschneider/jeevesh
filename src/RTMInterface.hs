@@ -9,6 +9,7 @@ import RTMTypes
 import Language.Haskell.TH.Syntax
 import qualified Data.Text as T
 import Web.Browser (openBrowser)
+import Data.Either
 import Control.Monad.Trans.Either
 import Control.Monad
 import Control.Monad.IO.Class
@@ -21,6 +22,7 @@ import Data.List (foldl')
 $(genRtmMethod "Echo" "rtm.test.echo" "name" ''T.Text ["name"]) -- do not make param names the same as payload names
 $(genRtmMethod "Frob" "rtm.auth.getFrob" "frob" ''T.Text [])
 $(genRtmMethod "GetToken" "rtm.auth.getToken" "auth" ''Auth ["frob"])
+$(genRtmMethod "CheckToken" "rtm.auth.checkToken" "auth" ''Auth ["auth_token"])
 
 
 userAuth :: T.Text -> IO ()
@@ -34,12 +36,24 @@ userAuth frob = do
     void getChar
 
 
+mapOnRight :: Monad m => (a -> EitherT x m b) -> EitherT x m a -> EitherT x m b
+mapOnRight f eithrt = EitherT $ do
+    eithr <- runEitherT eithrt
+    case eithr of
+        Right a -> runEitherT $ f a
+        Left x -> return (Left x)
+
 getUserToken :: Response Auth
-getUserToken = EitherT $ do
-    frobE <- runEitherT rtmFrob
-    case frobE of
-        Left error -> return (Left $ RError "fail" $ ErrorInfo "1" ("failed to get frob: " `T.append` (msg . err) error))
-        Right frob -> do
+getUserToken = mapOnRight getAuth rtmFrob
+    where
+        getAuth frob = EitherT $ do
             userAuth frob
             runEitherT $ rtmGetToken (T.unpack frob)
+
+-- getValidUserToken :: Either RError Auth -> Response Auth
+-- getValidUserToken Left _ = getUserToken
+-- getValidUserToken Right auth1 = do
+--     auth2 <- runEitherT $ rtmCheckToken (token auth1)
+--     getValidUserToken auth2
+
 

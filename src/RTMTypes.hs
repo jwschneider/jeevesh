@@ -3,6 +3,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE DeriveGeneric     #-}
+{-# LANGUAGE DuplicateRecordFields #-}
 
 
 module RTMTypes where
@@ -98,17 +99,26 @@ mkRequestParams endpoint requestParams paramNames = do
     pure $ ListE (TupE [Just (LitE (StringL "method")), Just (LitE (StringL endpoint))] :
         zipWith (\str nam -> TupE [Just (LitE (StringL str)), Just (VarE nam)]) requestParams paramNames)
 
+
+mkFieldAccessFnClause :: Name -> Name -> Name -> Name -> Q [Dec]
+mkFieldAccessFnClause fieldAccessName payloadName payloadType recName = 
+    pure [fieldAccessSig, fieldAccessFun] where
+        fieldAccessSig = SigD fieldAccessName (AppT (AppT ArrowT (ConT recName)) (ConT payloadType))
+        fieldAccessFun = FunD fieldAccessName [Clause [] (NormalB (VarE payloadName)) []]
+
 -- rtmFoo p_param1 ... = EitherT $ do
 --     body <- rtmGetJ [("method", "rtm.foo"), ("param1", param1) ...]
 --     return (parseResponse body :: Either RError RFoo)
-mkMethod :: Name -> String -> [String] -> Name -> Name -> Q [Dec]
-mkMethod methodName endpoint requestParams recName payloadName = do
+mkMethod :: Name -> String -> [String] -> Name -> Name -> Name -> Q [Dec]
+mkMethod methodName endpoint requestParams payloadName payloadType recName = do
     expr <- [| EitherT $ do 
                 body <- rtmGetJ $ map (join bimap T.pack) $(mkRequestParams endpoint requestParams paramNames)
-                return $ $(varE payloadName) <$> (parseResponse body :: Either RError $(conT recName))
+                return $ $(varE fieldAccessFnName) <$> (parseResponse body :: Either RError $(conT recName))
             |]
-    (pure. pure) $ FunD methodName [Clause pat (NormalB expr) []]
+    wherecl <- mkFieldAccessFnClause fieldAccessFnName payloadName payloadType recName
+    (pure. pure) $ FunD methodName [Clause pat (NormalB expr) wherecl]
     where
+        fieldAccessFnName = mkName ("f_" ++ nameBase payloadName)
         paramNames = map (mkName . ("p_" ++)) requestParams
         pat = map VarP paramNames
 
@@ -116,7 +126,7 @@ genRtmMethod :: String -> String -> String -> Name -> [String] -> Q [Dec]
 genRtmMethod rtmName endpoint payload payloadType requestParams = do
     record <- mkResponseRecord recName payloadName payloadType
     sigature <- mkSignature methodName (length requestParams) payloadType
-    method <- mkMethod methodName endpoint requestParams recName payloadName
+    method <- mkMethod methodName endpoint requestParams payloadName payloadType recName
     return (record ++ sigature ++ method)
     where
         recName = mkName ("R" ++ rtmName)

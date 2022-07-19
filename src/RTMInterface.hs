@@ -15,15 +15,18 @@ import Control.Monad
 import Control.Monad.IO.Class
 import Data.List (foldl')
 
--- rtmEcho :: T.Text -> Response REcho
+-- rtmEcho :: String -> Response T.Text
 -- rtmEcho p_name = EitherT $ do
 --     body <- rtmGetJ [("method", "rtm.test.echo"), ("name", name)]
---     return (parseResponse body :: Either RError REcho)
-$(genRtmMethod "Echo" "rtm.test.echo" "name" ''T.Text ["name"]) -- do not make param names the same as payload names
+--     return f_name <$> (parseResponse body :: Either RError REcho)
+--     where
+--         f_name :: REcho -> T.Text
+--         f_name = name
+$(genRtmMethod "Echo" "rtm.test.echo" "name" ''T.Text ["name"])
 $(genRtmMethod "Frob" "rtm.auth.getFrob" "frob" ''T.Text [])
 $(genRtmMethod "GetToken" "rtm.auth.getToken" "auth" ''Auth ["frob"])
 $(genRtmMethod "CheckToken" "rtm.auth.checkToken" "auth" ''Auth ["auth_token"])
-
+$(genRtmMethod "GetList" "rtm.lists.getList" "lists" ''Lists ["auth_token"])
 
 userAuth :: T.Text -> IO ()
 userAuth frob = do
@@ -35,25 +38,40 @@ userAuth frob = do
     putStrLn "Press any key when complete with authentication"
     void getChar
 
-
-mapOnRight :: Monad m => (a -> EitherT x m b) -> EitherT x m a -> EitherT x m b
-mapOnRight f eithrt = EitherT $ do
-    eithr <- runEitherT eithrt
-    case eithr of
-        Right a -> runEitherT $ f a
-        Left x -> return (Left x)
+-- mapOnRight f rspA = rspA >>= f
 
 getUserToken :: Response Auth
-getUserToken = mapOnRight getAuth rtmFrob
+getUserToken = rtmFrob >>= getAuth
     where
         getAuth frob = EitherT $ do
             userAuth frob
             runEitherT $ rtmGetToken (T.unpack frob)
+-- getUserToken = bracketEitherT rtmFrob (EitherT . fmap Right . userAuth) (rtmGetToken . T.unpack)
 
 -- getValidUserToken :: Either RError Auth -> Response Auth
 -- getValidUserToken Left _ = getUserToken
 -- getValidUserToken Right auth1 = do
 --     auth2 <- runEitherT $ rtmCheckToken (token auth1)
 --     getValidUserToken auth2
+
+
+callApiWithUserAuth :: (String -> Response a) -> Response Auth -> Response a
+callApiWithUserAuth method rAuth =
+    let rAuth' = secondEitherT (T.unpack . token) rAuth in
+        rAuth' >>= method
+
+getUserAuthAndCallApi :: (String -> Response a) -> Response a
+getUserAuthAndCallApi method = 
+    let rAuth = getUserToken in
+        callApiWithUserAuth method rAuth
+
+-- callApiWithUserAuth method (Just auth) = EitherT $ do
+--     vAuth <- runEitherT $ rtmCheckToken (T.unpack (token auth))
+--     case vAuth of 
+--         Left _ -> runEitherT $ callApiWithUserAuth method Nothing
+--         Right auth' -> runEitherT $ method (T.unpack (token auth))
+-- callApiWithUserAuth method Nothing =
+--     let rsp = getUserToken in
+--         mapOnRight (callApiWithUserAuth method) (Just rsp)
 
 

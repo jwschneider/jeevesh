@@ -32,6 +32,11 @@ data User = User {id :: T.Text, username :: T.Text, fullname :: T.Text} deriving
 instance FromJSON User
 data Auth = Auth {token :: T.Text, perms :: T.Text, user :: User} deriving (Generic, Show, Eq)
 instance FromJSON Auth
+data List = List {id :: T.Text, name :: T.Text, deleted :: T.Text, locked :: T.Text, archived :: T.Text, position :: T.Text, smart :: T.Text} deriving (Generic, Show, Eq)
+instance FromJSON List
+newtype Lists = Lists {list :: [List]} deriving (Generic, Show, Eq)
+instance FromJSON Lists
+
 
 instance FromJSON RError
 instance FromJSON ErrorInfo
@@ -113,6 +118,7 @@ mkMethod :: Name -> String -> [String] -> Name -> Name -> Name -> Q [Dec]
 mkMethod methodName endpoint requestParams payloadName payloadType recName = do
     expr <- [| EitherT $ do 
                 body <- rtmGetJ $ map (join bimap T.pack) $(mkRequestParams endpoint requestParams paramNames)
+                print body
                 return $ $(varE fieldAccessFnName) <$> (parseResponse body :: Either RError $(conT recName))
             |]
     wherecl <- mkFieldAccessFnClause fieldAccessFnName payloadName payloadType recName

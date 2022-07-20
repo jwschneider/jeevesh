@@ -26,6 +26,8 @@ source-repository head
 library
   exposed-modules:
       Lib
+      RTMApi
+      RTMApiInternal
       RTMInterface
       RTMTypes
       Scheduler
@@ -85,6 +87,8 @@ test-suite integration-test
   other-modules:
       IntegrationSpec
       Lib
+      RTMApi
+      RTMApiInternal
       RTMInterface
       RTMTypes
       Scheduler
@@ -119,6 +123,8 @@ test-suite unit-test
   other-modules:
       SchedulerSpec
       Lib
+      RTMApi
+      RTMApiInternal
       RTMInterface
       RTMTypes
       Scheduler

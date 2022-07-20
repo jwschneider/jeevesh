@@ -24,15 +24,15 @@ import Network.HTTP.Req
 
 
 newtype RTMResponse a = RTMResponse { rsp :: a } deriving (Generic, Show)
-data ErrorInfo = ErrorInfo { code :: T.Text, msg :: T.Text } deriving (Generic, Show, Eq)
-data RError = RError { stat :: T.Text, err :: ErrorInfo} deriving (Generic, Show, Eq)
+data ErrorInfo = ErrorInfo { code :: String, msg :: String } deriving (Generic, Show, Eq)
+data RError = RError { stat :: String, err :: ErrorInfo} deriving (Generic, Show, Eq)
 type Response a = EitherT RError IO a
 
-data User = User {id :: T.Text, username :: T.Text, fullname :: T.Text} deriving (Generic, Show, Eq)
+data User = User {id :: String, username :: String, fullname :: String} deriving (Generic, Show, Eq)
 instance FromJSON User
-data Auth = Auth {token :: T.Text, perms :: T.Text, user :: User} deriving (Generic, Show, Eq)
+data Auth = Auth {token :: String, perms :: String, user :: User} deriving (Generic, Show, Eq)
 instance FromJSON Auth
-data List = List {id :: T.Text, name :: T.Text, deleted :: T.Text, locked :: T.Text, archived :: T.Text, position :: T.Text, smart :: T.Text} deriving (Generic, Show, Eq)
+data List = List {id :: String, name :: String, deleted :: String, locked :: String, archived :: String, position :: String, smart :: String} deriving (Generic, Show, Eq)
 instance FromJSON List
 newtype Lists = Lists {list :: [List]} deriving (Generic, Show, Eq)
 instance FromJSON Lists
@@ -43,36 +43,36 @@ instance FromJSON ErrorInfo
 instance (FromJSON a) => FromJSON (RTMResponse a)
 
 failWithRError :: Result (Either RError a) -> Either RError a
-failWithRError (Error s) = Left $ RError "fail" $ ErrorInfo "0" ("parse error: " `T.append` T.pack s)
+failWithRError (Error s) = Left $ RError "fail" $ ErrorInfo "0" ("parse error: " ++ s)
 failWithRError (Success val) = val
 
 parseResponse :: forall a. FromJSON a => Value -> Either RError a
 parseResponse val =  failWithRError $ Right . rsp <$> (fromJSON val :: Result (RTMResponse a)) <|>
                      Left . rsp <$> (fromJSON val :: Result (RTMResponse RError))
 
-getApiKeyAndSharedSecret :: IO (T.Text, T.Text)
+getApiKeyAndSharedSecret :: IO (String, String)
 getApiKeyAndSharedSecret = do
     csv <- readFile "rtm-id.secret"
     let (key, secret) = break (==',') csv in
-        return (T.pack key, T.pack (drop 1 secret))
+        return (key, drop 1 secret)
 
-generateSignature :: [(T.Text, T.Text)] -> T.Text -> T.Text -- don't commit until api key and shared secret are removed
+generateSignature :: [(String, String)] -> String -> String -- don't commit until api key and shared secret are removed
 generateSignature params secret =
-    (T.pack . md5s . Str . T.unpack) $ 
-        Data.List.foldl' (\str pair -> str `T.append` fst pair `T.append` snd pair) secret (sortOn fst params)
+    (md5s . Str) $ 
+        Data.List.foldl' (\str pair -> str ++ uncurry (++) pair) secret (sortOn fst params)
 
-signRequest :: [(T.Text, T.Text)] -> T.Text -> [(T.Text, T.Text)]
+signRequest :: [(String, String)] -> String -> [(String, String)]
 signRequest params secret = 
     let signature = generateSignature params secret in
         params ++ [("api_sig", signature)]
 
-rtmGetJ :: [(T.Text, T.Text)] -> IO Value
+rtmGetJ :: [(String, String)] -> IO Value
 rtmGetJ params = do
     (key, secret) <- getApiKeyAndSharedSecret
     let signedParams = signRequest (("api_key", key) : ("format", "json") : params) secret
     runReq defaultHttpConfig $ do
         json <- req GET (https "api.rememberthemilk.com" /: "services" /: "rest") NoReqBody jsonResponse $
-            Data.List.foldl' (\str pair -> str <> uncurry (=:) pair) mempty signedParams
+            Data.List.foldl' (\params pair -> params <> ((T.pack . fst) pair =: snd pair)) mempty signedParams
         return (responseBody json :: Value)
 
 
@@ -86,7 +86,7 @@ mkResponseRecord recName payloadName payloadType = do
     return [decl, inst]
     where
         constr = RecC recName [(payloadName, defBang, ConT payloadType),
-                                (mkName "stat", defBang, ConT ''T.Text)]
+                                (mkName "stat", defBang, ConT ''String)]
         derivs = DerivClause Nothing [ConT ''Show, ConT ''Eq, ConT ''Generic]
 
 -- rtmFoo :: String -> ... -> Response RFoo
@@ -117,7 +117,7 @@ mkFieldAccessFnClause fieldAccessName payloadName payloadType recName =
 mkMethod :: Name -> String -> [String] -> Name -> Name -> Name -> Q [Dec]
 mkMethod methodName endpoint requestParams payloadName payloadType recName = do
     expr <- [| EitherT $ do 
-                body <- rtmGetJ $ map (join bimap T.pack) $(mkRequestParams endpoint requestParams paramNames)
+                body <- rtmGetJ $(mkRequestParams endpoint requestParams paramNames)
                 print body
                 return $ $(varE fieldAccessFnName) <$> (parseResponse body :: Either RError $(conT recName))
             |]

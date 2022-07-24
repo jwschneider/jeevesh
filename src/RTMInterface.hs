@@ -20,4 +20,9 @@ getUserAuthAndCallApi :: (String -> Response a) -> Response a
 getUserAuthAndCallApi method = 
         callApiWithUserAuth method getUserToken
 
+-- getListId :: String -> String -> Response String
+-- getListId listName authToken =
+--     (callApiWithUserAuth rtmGetLists authToken)
 
+
+-- TODO update API to support methods which have multiple optional arguments and which may return more than one thing

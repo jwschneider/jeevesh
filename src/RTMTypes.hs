@@ -18,6 +18,8 @@ type Response a = EitherT RError IO a
 
 data AuthLevel = AuthRequired | SignatureRequired | NoAuthRequired
 
+data Transaction = Transaction {id :: String, undoable :: String} deriving (Generic, Show, Eq)
+instance FromJSON Transaction
 data User = User {id :: String, username :: String, fullname :: String} deriving (Generic, Show, Eq)
 instance FromJSON User
 data Auth = Auth {token :: String, perms :: String, user :: User} deriving (Generic, Show, Eq)

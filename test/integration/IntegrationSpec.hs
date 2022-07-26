@@ -26,10 +26,12 @@ spec = do
             let textToEcho = "hello!"
             echo <- runEitherT (rtmEcho key textToEcho)
             echo `shouldBe` Right textToEcho
-    -- describe "RTMInterface.rtmFrob" $ do
-    --     it "should return a RFrob object" $ do
-    --         frobReturn <- runEitherT rtmFrob
-    --         assertFailOnLeft frobReturn
-    --     it "should have nonempty Text payload" $ do
-    --         frobReturn <- runEitherT rtmFrob
-    --         (null <$> frobReturn) `shouldBe` Right False
+    describe "RTMInterface.rtmFrob" $ do
+        it "should return a RFrob object" $ do
+            (key, secret) <- getApiKeyAndSharedSecret
+            frobReturn <- runEitherT (rtmFrob key secret)
+            assertFailOnLeft frobReturn
+        it "should have nonempty Text payload" $ do
+            (key, secret) <- getApiKeyAndSharedSecret
+            frobReturn <- runEitherT (rtmFrob key secret)
+            (null <$> frobReturn) `shouldBe` Right False

@@ -16,6 +16,8 @@ data ErrorInfo = ErrorInfo { code :: String, msg :: String } deriving (Generic, 
 data RError = RError { stat :: String, err :: ErrorInfo} deriving (Generic, Show, Eq)
 type Response a = EitherT RError IO a
 
+data AuthLevel = AuthRequired | SignatureRequired | NoAuthRequired
+
 data User = User {id :: String, username :: String, fullname :: String} deriving (Generic, Show, Eq)
 instance FromJSON User
 data Auth = Auth {token :: String, perms :: String, user :: User} deriving (Generic, Show, Eq)

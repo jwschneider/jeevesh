@@ -35,3 +35,4 @@ spec = do
             (key, secret) <- getApiKeyAndSharedSecret
             frobReturn <- runEitherT (rtmFrob key secret)
             (null <$> frobReturn) `shouldBe` Right False
+            -- TODO find a way to not have to get the key and secret on each test

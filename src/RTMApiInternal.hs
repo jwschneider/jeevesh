@@ -28,8 +28,9 @@ failWithRError (Error s) = Left $ RError "fail" $ ErrorInfo "0" ("parse error: "
 failWithRError (Success val) = val
 
 parseResponse :: forall a. FromJSON a => Value -> Either RError a
-parseResponse val =  failWithRError $ Right . rsp <$> (fromJSON val :: Result (RTMResponse a)) <|>
-                     Left . rsp <$> (fromJSON val :: Result (RTMResponse RError))
+parseResponse val =  failWithRError $ Left . rsp <$> (fromJSON val :: Result (RTMResponse RError)) <|> 
+    Right . rsp <$> (fromJSON val :: Result (RTMResponse a))
+                     
 
 
 
@@ -173,6 +174,7 @@ mkMethod methodName method httpMethod requestParams requestOptionalParams authLe
     pat <- mapM varP (paramNames ++ optionalParamNames ++ authParamNames)
     expr <- [| EitherT $ do
                 body <- $(rtmCallJ httpMethod) $(varE signedParams)
+                -- print body
                 let resp = parseResponse body :: Either RError $(conT recName)
                 return (bimap err $(lambdaSuccess recName includeTransaction) resp)
             |]

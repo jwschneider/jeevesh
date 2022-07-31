@@ -11,12 +11,12 @@ getApiKeyAndSharedSecret = do
     let (key, secret) = break (==',') csv in
         return (key, drop 1 secret)
 
--- getUserToken :: Response Auth
--- getUserToken = rtmFrob >>= getAuth
---     where
---         getAuth frob = EitherT $ do
---             userAuth frob
---             runEitherT $ rtmGetToken frob
+getUserToken :: String -> String -> Response Auth
+getUserToken key secret = rtmFrob key secret >>= getAuth key secret
+    where
+        getAuth key secret frob = EitherT $ do
+            userAuth key frob secret
+            runEitherT $ rtmGetToken key frob secret
 
 -- callApiWithUserAuth :: (String -> Response a) -> Response Auth -> Response a
 -- callApiWithUserAuth method rAuth =

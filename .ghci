@@ -3,4 +3,4 @@
 :set -XOverloadedStrings
 :set -XNoMonomorphismRestriction
 :set -XTemplateHaskell
-:set -ddump-splices
+:set -dth-dec-file

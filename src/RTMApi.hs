@@ -20,13 +20,13 @@ import Control.Monad
 --         f_name = name
 $(genRtmMethod "Echo" "rtm.test.echo" "GET" "name" ''String ["name"] [] NoAuthRequired)
 $(genRtmMethod "Frob" "rtm.auth.getFrob" "GET" "frob" ''String [] [] SignatureRequired)
--- $(genRtmMethod "GetToken" "rtm.auth.getToken" "GET" "auth" ''Auth ["frob"] [] SignatureRequired)
--- -- $(genRtmMethod "CheckToken" "rtm.auth.checkToken" "auth" ''Auth ["auth_token"])
+$(genRtmMethod "GetToken" "rtm.auth.getToken" "GET" "auth" ''Auth ["frob"] [] SignatureRequired)
+$(genRtmMethod "CheckToken" "rtm.auth.checkToken" "GET" "auth" ''Auth ["auth_token"] [] SignatureRequired)
 -- -- $(genRtmMethod "GetLists" "rtm.lists.getList" "lists" ''Lists ["auth_token"])
 -- $(genRtmMethod "TasksGetList" "rtm.tasks.getList" "GET" "list" ''List [] ["list_id", "filter", "last_sync", "callback"] AuthRequired)
 
 userAuth :: String -> String -> String -> IO ()
-userAuth frob api_key shared_secret = do
+userAuth api_key frob shared_secret = do
     let endpoint = "https://www.rememberthemilk.com/services/auth/"
     let params = [("api_key", api_key), ("perms", "delete"), ("frob", frob)]
     openBrowser $ endpoint ++ "?" ++ 

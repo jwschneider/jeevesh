@@ -30,6 +30,7 @@ library
       RTMApiInternal
       RTMInterface
       RTMTypes
+      RTMTypesInternal
       Scheduler
   other-modules:
       Paths_jeeves
@@ -91,6 +92,7 @@ test-suite integration-test
       RTMApiInternal
       RTMInterface
       RTMTypes
+      RTMTypesInternal
       Scheduler
       Paths_jeeves
   hs-source-dirs:
@@ -127,6 +129,7 @@ test-suite unit-test
       RTMApiInternal
       RTMInterface
       RTMTypes
+      RTMTypesInternal
       Scheduler
       Paths_jeeves
   hs-source-dirs:

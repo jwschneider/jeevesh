@@ -1,7 +1,6 @@
 
 {-# LANGUAGE DeriveGeneric     #-}
-{-# LANGUAGE DuplicateRecordFields #-}
-
+{-# LANGUAGE OverloadedStrings #-}
 
 module RTMTypes where
 
@@ -14,20 +13,23 @@ import Data.Aeson
 newtype RTMResponse a = RTMResponse { rsp :: a } deriving (Generic, Show)
 data ErrorInfo = ErrorInfo { code :: String, msg :: String } deriving (Generic, Show, Eq)
 data RError = RError { stat :: String, err :: ErrorInfo} deriving (Generic, Show, Eq)
-type Response a = EitherT RError IO a
+type Response a = EitherT ErrorInfo IO a
 
 data AuthLevel = AuthRequired | SignatureRequired | NoAuthRequired
 
-data Transaction = Transaction {id :: String, undoable :: String} deriving (Generic, Show, Eq)
-instance FromJSON Transaction
-data User = User {id :: String, username :: String, fullname :: String} deriving (Generic, Show, Eq)
-instance FromJSON User
-data Auth = Auth {token :: String, perms :: String, user :: User} deriving (Generic, Show, Eq)
-instance FromJSON Auth
-data List = List {id :: String, name :: String, deleted :: String, locked :: String, archived :: String, position :: String, smart :: String} deriving (Generic, Show, Eq)
-instance FromJSON List
-newtype Lists = Lists {list :: [List]} deriving (Generic, Show, Eq)
-instance FromJSON Lists
+data Transaction = Transaction String String deriving (Show, Eq)
+instance FromJSON Transaction where
+    parseJSON = withObject "Transaction" $ \v -> Transaction
+        <$> v .: "id"
+        <*> v .: "undoable"
+-- data User = User {id :: String, username :: String, fullname :: String} deriving (Generic, Show, Eq)
+-- instance FromJSON User
+-- data Auth = Auth {token :: String, perms :: String, user :: User} deriving (Generic, Show, Eq)
+-- instance FromJSON Auth
+-- data List = List {id :: String, name :: String, deleted :: String, locked :: String, archived :: String, position :: String, smart :: String} deriving (Generic, Show, Eq)
+-- instance FromJSON List
+-- newtype Lists = Lists {list :: [List]} deriving (Generic, Show, Eq)
+-- instance FromJSON Lists
 
 
 instance FromJSON RError

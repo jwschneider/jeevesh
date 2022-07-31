@@ -12,10 +12,10 @@ import Control.Monad.Trans.Either
 import GHC.TypeLits
 
 
-assertFailOnLeft :: Either RError b -> IO()
+assertFailOnLeft :: Either ErrorInfo b -> IO()
 assertFailOnLeft val =
     case val of
-        Left error -> assertFailure ((msg . err) error)
+        Left error -> assertFailure (msg error)
         _ -> return ()
 
 spec :: Spec

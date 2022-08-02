@@ -4,6 +4,7 @@ import RTMTypes
 import RTMApi
 
 import Control.Monad.Trans.Either
+import Data.List
 
 getApiKeyAndSharedSecret :: IO (String, String)
 getApiKeyAndSharedSecret = do
@@ -18,17 +19,22 @@ getUserToken key secret = rtmFrob key secret >>= getAuth key secret
             userAuth key frob secret
             runEitherT $ rtmGetToken key frob secret
 
--- callApiWithUserAuth :: (String -> Response a) -> Response Auth -> Response a
--- callApiWithUserAuth method rAuth =
---     rAuth >>= rtmCheckToken . token >>= method . token
+callApiWithUserAuth :: (String -> String -> String -> Response a) -> String -> String -> Response Auth -> Response a
+callApiWithUserAuth method key secret rAuth =
+    rAuth >>= checkToken . auth_token >>= method key secret . auth_token
+    where
+        checkToken tk = rtmCheckToken key tk secret
 
 -- getUserAuthAndCallApi :: (String -> Response a) -> Response a
--- getUserAuthAndCallApi method = 
---         callApiWithUserAuth method getUserToken
+-- getUserAuthAndCallApi method = EitherT $ do
+--     (key, secret) <- getApiKeyAndSharedSecret
+--     runEitherT $ callApiWithUserAuth key method (getUserToken key secret) secret
 
--- getListId :: String -> String -> Response String
--- getListId listName authToken =
---     (callApiWithUserAuth rtmGetLists authToken)
+getListId :: String -> String -> String -> Response Auth -> Response String
+getListId key listName secret authToken = do
+    lists <- lists_list <$> callApiWithUserAuth rtmGetLists key secret authToken
+    case find (\list -> list_name list == listName) lists of
+        Nothing -> left $ ErrorInfo "0" ("Unable to find list: " ++ listName)
+        (Just list) -> right $ list_id list
 
 
--- TODO update API to support methods which have multiple optional arguments and which may return more than one thing

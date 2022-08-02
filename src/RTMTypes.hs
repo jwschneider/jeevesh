@@ -18,15 +18,18 @@ type Response a = EitherT ErrorInfo IO a
 data AuthLevel = AuthRequired | SignatureRequired | NoAuthRequired
 
 
-$(genRtmDataType (mkName "Transaction") [("id", ''String), ("undoable", ''String)])
-$(genRtmDataType (mkName "User") [("id", ''String), ("username", ''String), ("fullname", ''String)])
+
+$(genRtmDataType (mkName "Transaction") [("id", strT), ("undoable", strT)])
+$(genRtmDataType (mkName "User") [("id", strT), ("username", strT), ("fullname", strT)])
 -- data User = User {id :: String, username :: String, fullname :: String} deriving (Show, Eq)
 -- instance FromJSON User where
 --     parseJSON = withObject "User" $ \v -> User
 --         <$> v .: "id"
 --         <*> v .: "username"
 --         <*> v .: "fullname"
-$(genRtmDataType (mkName "Auth") [("token", ''String), ("perms", ''String), ("user", ''User)])
+$(genRtmDataType (mkName "Auth") [("token", strT), ("perms", strT), ("user", ConT ''User)])
+$(genRtmDataType (mkName "List") [("id", strT), ("name", strT), ("deleted", strT), ("locked", strT), ("archived", strT), ("position", strT), ("smart", strT)])
+$(genRtmDataType (mkName "Lists") [("list", AppT ListT (ConT ''List))])
 -- data List = List {id :: String, name :: String, deleted :: String, locked :: String, archived :: String, position :: String, smart :: String} deriving (Generic, Show, Eq)
 -- instance FromJSON List
 -- newtype Lists = Lists {list :: [List]} deriving (Generic, Show, Eq)

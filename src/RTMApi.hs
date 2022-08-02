@@ -22,7 +22,7 @@ $(genRtmMethod "Echo" "rtm.test.echo" "GET" "name" ''String ["name"] [] NoAuthRe
 $(genRtmMethod "Frob" "rtm.auth.getFrob" "GET" "frob" ''String [] [] SignatureRequired)
 $(genRtmMethod "GetToken" "rtm.auth.getToken" "GET" "auth" ''Auth ["frob"] [] SignatureRequired)
 $(genRtmMethod "CheckToken" "rtm.auth.checkToken" "GET" "auth" ''Auth ["auth_token"] [] SignatureRequired)
--- -- $(genRtmMethod "GetLists" "rtm.lists.getList" "lists" ''Lists ["auth_token"])
+$(genRtmMethod "GetLists" "rtm.lists.getList" "GET" "lists" ''Lists [] [] AuthRequired)
 -- $(genRtmMethod "TasksGetList" "rtm.tasks.getList" "GET" "list" ''List [] ["list_id", "filter", "last_sync", "callback"] AuthRequired)
 
 userAuth :: String -> String -> String -> IO ()

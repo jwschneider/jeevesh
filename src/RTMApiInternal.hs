@@ -128,8 +128,8 @@ mkFieldAccessFnClause fieldAccessName payloadName payloadType recName =
 
 mkAuthParams :: AuthLevel -> [String]
 mkAuthParams NoAuthRequired = empty
-mkAuthParams SignatureRequired = "shared_secret" : mkAuthParams NoAuthRequired
-mkAuthParams AuthRequired = "auth_token" : mkAuthParams SignatureRequired
+mkAuthParams SignatureRequired = mkAuthParams NoAuthRequired ++ ["shared_secret"]
+mkAuthParams AuthRequired = mkAuthParams SignatureRequired ++ ["auth_token"]
 
 mkAuthParamNames :: AuthLevel -> [Name]
 mkAuthParamNames authLevel = map mkName (mkAuthParams authLevel)

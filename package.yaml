@@ -36,6 +36,9 @@ dependencies:
 - http-api-data
 - MissingH
 - open-browser
+- yesod
+- warp
+- async
 
 library:
   source-dirs: src

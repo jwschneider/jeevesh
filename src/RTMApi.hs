@@ -33,3 +33,12 @@ userAuth api_key frob shared_secret = do
         tail (foldl' (\b (k,  v) -> b ++ "&" ++ k ++ "=" ++ v) "" (signRequest params (Just shared_secret)))
     putStrLn "Press any key when complete with authentication"
     void getChar
+
+
+userAuthRedirect :: String -> String -> String -> IO ()
+userAuthRedirect api_key callback shared_secret = do
+    let endpoint = "https://www.rememberthemilk.com/services/auth/"
+    let params = [("api_key", api_key), ("perms", "delete"), ("callback", callback)]
+    openBrowser $ endpoint ++ "?" ++ 
+        tail (foldl' (\b (k,  v) -> b ++ "&" ++ k ++ "=" ++ v) "" (signRequest params (Just shared_secret)))
+    putStrLn "browser launched successfully"
